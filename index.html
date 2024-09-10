@@ -3,9 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataFlow Analytics</title>
+    <title>Advanced Chat Application</title>
     <style>
-        /* Your existing CSS styles here */
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        :root {
+            --primary-color: #00bfae;
+            --secondary-color: #0084ff;
+            --background-color: #1e1e1e;
+            --sidebar-color: #2c2c2c;
+            --text-color: #e1e1e1;
+            --border-color: #444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-color);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 80px;
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.75rem;
+            transition: color 0.3s ease;
+        }
+
+        .sidebar-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .sidebar-content h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .sidebar-content h2 {
+            opacity: 0;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            transition: margin-left 0.3s ease;
+        }
+
+        .content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            overflow-y: auto;
+            padding-bottom: 5rem;
+            border-radius: 0.5rem;
+            background-color: #2d2d2d;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        #chat-messages {
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+            position: relative;
+            animation: fadeIn 0.5s ease;
+            word-wrap: break-word;
+        }
+
+        .user-message {
+            background-color: var(--secondary-color);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 0;
+        }
+
+        .bot-message {
+            background-color: #333;
+            color: var(--text-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-input-container {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            background-color: var(--sidebar-color);
+            border-top: 1px solid var(--border-color);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            padding: 0.75rem;
+            background-color: #333;
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(0, 191, 174, 0.3);
+        }
+
+        .send-btn, .file-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: color 0.3s ease;
+            margin-left: 0.5rem;
+            padding: 0.5rem;
+        }
+
+        .send-btn:hover, .file-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .file-btn {
+            margin-right: 0.5rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-name {
+            margin-right: 1rem;
+            font-size: 0.9rem;
+            color: #999;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .typing-indicator.visible {
+            opacity: 1;
+        }
+
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: var(--text-color);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            animation: typing 1s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 1rem;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .sidebar.collapsed {
+                height: 60px;
+            }
+
+            .sidebar-content h2 {
+                font-size: 1.2rem;
+                margin-bottom: 0;
+            }
+
+            .main-content {
+                height: calc(100vh - 60px);
+                padding: 1rem;
+            }
+
+            .chat-input-container {
+                padding: 0.5rem;
+            }
+
+            .chat-input {
+                font-size: 0.9rem;
+            }
+
+            .send-btn, .file-btn {
+                font-size: 1.2rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -36,9 +305,46 @@
     </div>
 
     <script>
-        // Your existing JavaScript code here, with the following modifications:
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const chatMessages = document.getElementById('chat-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
 
-        async function sendMessage() {
+        toggleSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            mainContent.style.marginLeft = sidebar.classList.contains('collapsed') ? '80px' : '280px';
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                fileName.textContent = e.target.files[0].name;
+            } else {
+                fileName.textContent = '';
+            }
+        });
+
+        function showTypingIndicator() {
+            typingIndicator.classList.add('visible');
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.classList.remove('visible');
+        }
+
+        function addMessage(content, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', isUser ? 'user-message' : 'bot-message');
+            messageElement.textContent = content;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
             const message = chatInput.value.trim();
             const file = fileInput.files[0];
 
@@ -52,25 +358,11 @@
 
                 showTypingIndicator();
 
-                const formData = new FormData();
-                formData.append('prompt', message);
-                if (file) {
-                    formData.append('file', file);
-                }
-
-                try {
-                    const response = await fetch('/api/analyze', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const data = await response.json();
+                // Simulate bot response
+                setTimeout(() => {
                     hideTypingIndicator();
-                    addMessage(data.result);
-                } catch (error) {
-                    console.error('Error:', error);
-                    hideTypingIndicator();
-                    addMessage("An error occurred while processing your request.");
-                }
+                    addMessage("I'm an AI assistant. How can I help you today?");
+                }, 2000);
 
                 chatInput.value = '';
                 fileInput.value = '';
@@ -78,7 +370,6 @@
             }
         }
 
-        // Update event listeners to use the new sendMessage function
         sendBtn.addEventListener('click', sendMessage);
 
         chatInput.addEventListener('keypress', (e) => {
@@ -89,7 +380,7 @@
 
         // Initial bot message
         setTimeout(() => {
-            addMessage("Hello! I'm DataFlow Analytics. How can I assist you today?");
+            addMessage("Hello! I'm Neo. How can I assist you today?");
         }, 1000);
     </script>
 </body>
